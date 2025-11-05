@@ -343,6 +343,19 @@ public class StudentsForm extends javax.swing.JFrame {
 
         jMenuBar1.add(jMenu2);
 
+        javax.swing.JMenu jMenu3 = new javax.swing.JMenu();
+        jMenu3.setText("AI");
+        
+        javax.swing.JMenuItem aiMenuItem = new javax.swing.JMenuItem();
+        aiMenuItem.setText("Train & Predict Model");
+        aiMenuItem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                openAITrainingWindow();
+            }
+        });
+        jMenu3.add(aiMenuItem);
+        jMenuBar1.add(jMenu3);
+
         setJMenuBar(jMenuBar1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -774,6 +787,14 @@ public class StudentsForm extends javax.swing.JFrame {
 
         studid.setText(String.valueOf(nextID));
     }
+    /**
+     * Open the AI Model Training and Prediction window
+     */
+    private void openAITrainingWindow() {
+        SelectSchoolYear aiWindow = new SelectSchoolYear();
+        aiWindow.setVisible(true);
+    }
+
     /**
      * @param args the command line arguments
      */

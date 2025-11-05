@@ -4,17 +4,31 @@
  */
 package com.mycompany.colesenrollmentsystem;
 
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
+
 /**
- *
+ * SelectSchoolYear - GUI for selecting school year database and training AI models
  * @author Arch Coles
  */
 public class SelectSchoolYear extends javax.swing.JFrame {
+    private Training trainer;
+    private Predict predictor;
+    private ArrayList<String> availableDatabases;
+    private String selectedDatabase;
+    private boolean modelTrained = false;
 
     /**
      * Creates new form SelectSchoolYear
      */
     public SelectSchoolYear() {
         initComponents();
+        trainer = new Training();
+        predictor = new Predict();
+        availableDatabases = new ArrayList<>();
+        setLocationRelativeTo(null);
     }
 
     /**
@@ -26,21 +40,373 @@ public class SelectSchoolYear extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
+        schoolYearCombo = new javax.swing.JComboBox<>();
+        trainButton = new javax.swing.JButton();
+        statusLabel = new javax.swing.JLabel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        modelInfoTextArea = new javax.swing.JTextArea();
+        jButton1 = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        predictionTable = new javax.swing.JTable();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        setTitle("AI Model Training & Prediction System");
+        setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowOpened(java.awt.event.WindowEvent evt) {
+                formWindowOpened(evt);
+            }
+        });
+
+        jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 24)); // NOI18N
+        jLabel1.setText("AI MODEL TRAINING & PREDICTION");
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 12)); // NOI18N
+        jLabel2.setText("Select School Year Database:");
+
+        schoolYearCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "-- Select School Year --" }));
+        schoolYearCombo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                schoolYearComboActionPerformed(evt);
+            }
+        });
+
+        trainButton.setText("Train AI Model");
+        trainButton.setEnabled(false);
+        trainButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                trainButtonActionPerformed(evt);
+            }
+        });
+
+        statusLabel.setFont(new java.awt.Font("Segoe UI", 0, 11)); // NOI18N
+        statusLabel.setText("Status: Idle");
+
+        modelInfoTextArea.setColumns(20);
+        modelInfoTextArea.setEditable(false);
+        modelInfoTextArea.setRows(5);
+        modelInfoTextArea.setText("Model Information will appear here...");
+        jScrollPane1.setViewportView(modelInfoTextArea);
+
+        jButton1.setText("Refresh Databases");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setFont(new java.awt.Font("Segoe UI", 0, 12)); // NOI18N
+        jLabel3.setText("Model Training Status:");
+
+        predictionTable.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Student ID", "Year Level", "Course", "Subjects Enrolled", "Recommended Subject"
+            }
+        ));
+        jScrollPane2.setViewportView(predictionTable);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 400, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel1)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel2)
+                            .addComponent(schoolYearCombo, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(trainButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3)
+                            .addComponent(statusLabel)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 600, Short.MAX_VALUE)))
+                    .addComponent(jScrollPane2))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 300, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel1)
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(schoolYearCombo, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(18, 18, 18)
+                        .addComponent(trainButton, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(10, 10, 10)
+                        .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel3)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(statusLabel)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 150, Short.MAX_VALUE)))
+                .addGap(18, 18, 18)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 200, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
+        loadAvailableDatabases();
+    }//GEN-LAST:event_formWindowOpened
+
+    private void schoolYearComboActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_schoolYearComboActionPerformed
+        int selectedIndex = schoolYearCombo.getSelectedIndex();
+        
+        if (selectedIndex > 0) {
+            selectedDatabase = availableDatabases.get(selectedIndex - 1);
+            trainButton.setEnabled(true);
+            statusLabel.setText("Status: Database '" + selectedDatabase + "' selected. Ready to train.");
+            
+            // Check if model already exists
+            if (predictor.loadModel(selectedDatabase)) {
+                modelTrained = true;
+                statusLabel.setText("Status: Model found for '" + selectedDatabase + "'. Ready to use.");
+                displayModelInfo();
+                loadPredictions();
+                refreshStudentsForm();
+            }
+        } else {
+            trainButton.setEnabled(false);
+            statusLabel.setText("Status: No database selected");
+            modelTrained = false;
+            clearModelInfo();
+        }
+    }//GEN-LAST:event_schoolYearComboActionPerformed
+
+    private void trainButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_trainButtonActionPerformed
+        if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a school year first", 
+                    "No Selection", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        statusLabel.setText("Status: Training model... Please wait.");
+        trainButton.setEnabled(false);
+        
+        try {
+            boolean success = trainer.trainModel(selectedDatabase);
+            
+            if (success) {
+                modelTrained = true;
+                statusLabel.setText("Status: ✓ Model trained successfully!");
+                
+                // Load the newly trained model
+                if (predictor.loadModel(selectedDatabase)) {
+                    displayModelInfo();
+                    loadPredictions();
+                    refreshStudentsForm();
+                    JOptionPane.showMessageDialog(this, 
+                            "AI Model trained successfully using " + selectedDatabase + " data!\n" +
+                            "Recommended subjects have been added to the database.\n" +
+                            "Check the Subjects table in StudentsForm.",
+                            "Training Complete", JOptionPane.INFORMATION_MESSAGE);
+                }
+            } else {
+                statusLabel.setText("Status: ✗ Model training failed");
+                JOptionPane.showMessageDialog(this, "Failed to train model. Check logs for details.", 
+                        "Training Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception ex) {
+            statusLabel.setText("Status: ✗ Error during training");
+            JOptionPane.showMessageDialog(this, "Error: " + ex.getMessage(), 
+                    "Training Exception", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            trainButton.setEnabled(true);
+        }
+    }//GEN-LAST:event_trainButtonActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        loadAvailableDatabases();
+        JOptionPane.showMessageDialog(this, "Database list refreshed!", "Refresh Complete", 
+                JOptionPane.INFORMATION_MESSAGE);
+    }//GEN-LAST:event_jButton1ActionPerformed
+
+    /**
+     * Load all available school year databases from MySQL
+     */
+    private void loadAvailableDatabases() {
+        try {
+            availableDatabases.clear();
+            schoolYearCombo.removeAllItems();
+            schoolYearCombo.addItem("-- Select School Year --");
+            
+            String query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA " +
+                          "WHERE SCHEMA_NAME LIKE '%SY%' OR SCHEMA_NAME LIKE '%Sem%' " +
+                          "ORDER BY SCHEMA_NAME DESC";
+            
+            ResultSet dbResult = ColesEnrollmentSystem.st.executeQuery(query);
+            
+            while (dbResult.next()) {
+                String dbName = dbResult.getString("SCHEMA_NAME");
+                availableDatabases.add(dbName);
+                schoolYearCombo.addItem(dbName);
+            }
+            
+            if (availableDatabases.isEmpty()) {
+                statusLabel.setText("Status: No school year databases found");
+            } else {
+                statusLabel.setText("Status: Found " + availableDatabases.size() + " databases");
+            }
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading databases: " + ex.getMessage(), 
+                    "Database Error", JOptionPane.ERROR_MESSAGE);
+            statusLabel.setText("Status: Error loading databases");
+        }
+    }
+
+    /**
+     * Display model information in the text area
+     */
+    private void displayModelInfo() {
+        try {
+            String modelInfo = "Database: " + selectedDatabase + "\n\n";
+            modelInfo += "Model Type: Decision Tree (J48 - Weka)\n\n";
+            modelInfo += "Purpose: Subject Recommendation System\n";
+            modelInfo += "Predicts recommended subjects for students\n";
+            modelInfo += "in the current semester\n\n";
+            modelInfo += "Training Data:\n";
+            modelInfo += "- Instances: " + trainer.getDataset().numInstances() + "\n";
+            modelInfo += "- Attributes: " + trainer.getDataset().numAttributes() + "\n";
+            modelInfo += "- Features: Year Level, Course, Subjects Enrolled\n";
+            modelInfo += "- Target: RecommendedSubject\n\n";
+            modelInfo += "Model Structure:\n" + trainer.getModelInfo();
+            
+            modelInfoTextArea.setText(modelInfo);
+        } catch (Exception ex) {
+            modelInfoTextArea.setText("Error displaying model info: " + ex.getMessage());
+        }
+    }
+
+    /**
+     * Clear model information display
+     */
+    private void clearModelInfo() {
+        modelInfoTextArea.setText("Model Information will appear here...");
+        DefaultTableModel model = (DefaultTableModel) predictionTable.getModel();
+        model.setRowCount(0);
+    }
+
+    /**
+     * Load predictions for sample students and save recommended subjects to database
+     */
+    private void loadPredictions() {
+        try {
+            if (!modelTrained) {
+                return;
+            }
+            
+            DefaultTableModel model = (DefaultTableModel) predictionTable.getModel();
+            model.setRowCount(0);
+            
+            String query = "SELECT e.studid, s.YearLevel, s.Course, " +
+                          "COUNT(e.subjid) as SubjectsEnrolled " +
+                          "FROM Enroll e " +
+                          "LEFT JOIN StudentsTable s ON e.studid = s.studentid " +
+                          "GROUP BY e.studid, s.YearLevel, s.Course LIMIT 10";
+            
+            ColesEnrollmentSystem.st.executeUpdate("USE " + selectedDatabase);
+            ResultSet rs = ColesEnrollmentSystem.st.executeQuery(query);
+            
+            while (rs.next()) {
+                String studentID = rs.getString("studid");
+                String yearLevel = rs.getString("YearLevel");
+                String course = rs.getString("Course");
+                double subjects = rs.getDouble("SubjectsEnrolled");
+                
+                // Get predicted subject recommendation
+                String recommendedSubject = predictor.predictRecommendedSubject(yearLevel, course, subjects);
+                
+                // Save the predicted subject to database if it doesn't already exist
+                savePredictedSubject(recommendedSubject);
+                
+                model.addRow(new Object[]{studentID, yearLevel, course, 
+                                         (int)subjects, recommendedSubject});
+            }
+            
+            JOptionPane.showMessageDialog(this, 
+                    "Predictions loaded and recommended subjects saved to database!",
+                    "Predictions Ready", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading predictions: " + ex.getMessage(), 
+                    "Prediction Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    /**
+     * Refresh the StudentsForm to display newly added predicted subjects
+     */
+    private void refreshStudentsForm() {
+        try {
+            StudentsForm studentsForm = StudentsForm.getCurrentInstance();
+            if (studentsForm != null) {
+                studentsForm.showRecords();
+                System.out.println("StudentsForm refreshed with new predicted subjects");
+            }
+        } catch (Exception ex) {
+            System.out.println("Could not refresh StudentsForm: " + ex.getMessage());
+        }
+    }
+    
+    /**
+     * Save a predicted subject to the SubjectsTable in the database
+     * @param subjectCode The predicted subject code
+     */
+    private void savePredictedSubject(String subjectCode) {
+        try {
+            if (subjectCode == null || subjectCode.isEmpty() || subjectCode.contains("ERROR")) {
+                return;
+            }
+            
+            // Check if subject already exists
+            String checkQuery = "SELECT COUNT(*) FROM SubjectsTable WHERE subjcode = '" + subjectCode + "'";
+            ResultSet checkRs = ColesEnrollmentSystem.st.executeQuery(checkQuery);
+            
+            if (checkRs.next() && checkRs.getInt(1) > 0) {
+                System.out.println("Subject " + subjectCode + " already exists in database");
+                return;
+            }
+            
+            // Get next available subject ID
+            String maxIdQuery = "SELECT MAX(subjid) FROM SubjectsTable";
+            ResultSet maxRs = ColesEnrollmentSystem.st.executeQuery(maxIdQuery);
+            int nextSubjId = 2001;
+            if (maxRs.next()) {
+                int maxId = maxRs.getInt(1);
+                if (maxId >= 2001) {
+                    nextSubjId = maxId + 1;
+                }
+            }
+            
+            // Insert the predicted subject
+            String insertQuery = "INSERT INTO SubjectsTable (subjid, subjcode, subjdescription, subjschedule, subjunit) " +
+                                "VALUES (" + nextSubjId + ", '" + subjectCode + "', 'AI Recommended Subject', 'TBA', 3)";
+            
+            ColesEnrollmentSystem.st.executeUpdate(insertQuery);
+            System.out.println("Predicted subject " + subjectCode + " saved to database with ID: " + nextSubjId);
+            
+        } catch (Exception ex) {
+            System.out.println("Error saving predicted subject: " + ex.getMessage());
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -78,5 +444,16 @@ public class SelectSchoolYear extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton jButton1;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTextArea modelInfoTextArea;
+    private javax.swing.JButton trainButton;
+    private javax.swing.JTable predictionTable;
+    private javax.swing.JComboBox<String> schoolYearCombo;
+    private javax.swing.JLabel statusLabel;
     // End of variables declaration//GEN-END:variables
 }
