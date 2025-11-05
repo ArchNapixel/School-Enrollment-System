@@ -4,12 +4,9 @@
  */
 package com.mycompany.colesenrollmentsystem;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.Serializable;
-import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Scanner;
 import weka.classifiers.Classifier;
 import weka.classifiers.trees.J48;
 import weka.core.Attribute;
@@ -17,12 +14,6 @@ import weka.core.DenseInstance;
 import weka.core.Instances;
 import weka.core.SerializationHelper;
 
-/**
- * Training class for building AI models using Weka
- * Trains on enrollment data from selected school year
- * Predicts recommended subjects for students in the current semester
- * @author Arch Coles
- */
 public class Training extends ColesEnrollmentSystem {
     private Classifier classifier;
     private Instances dataset;
@@ -37,12 +28,6 @@ public class Training extends ColesEnrollmentSystem {
         DBConnect();
     }
     
-    /**
-     * Train the AI model using enrollment data from the selected school year
-     * Model predicts recommended subjects for students based on their profile
-     * @param databaseName The selected school year database name
-     * @return True if training was successful, false otherwise
-     */
     public boolean trainModel(String databaseName) {
         try {
             // Switch to selected database
@@ -79,11 +64,6 @@ public class Training extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Create a Weka dataset from enrollment data
-     * Dataset trains the model to predict recommended subjects for students
-     * @return Instances object representing the dataset
-     */
     private Instances createDataset() {
         try {
             // Query to get student enrollment and subject information
@@ -179,26 +159,14 @@ public class Training extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Get the trained classifier
-     * @return The Classifier object
-     */
     public Classifier getClassifier() {
         return classifier;
     }
     
-    /**
-     * Get the dataset used for training
-     * @return The Instances object
-     */
     public Instances getDataset() {
         return dataset;
     }
     
-    /**
-     * Get information about the trained model
-     * @return String representation of the model
-     */
     public String getModelInfo() {
         if (classifier == null) {
             return "No model trained yet";

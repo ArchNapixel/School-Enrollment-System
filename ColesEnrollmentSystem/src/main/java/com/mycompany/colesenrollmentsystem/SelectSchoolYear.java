@@ -9,10 +9,6 @@ import java.util.ArrayList;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-/**
- * SelectSchoolYear - GUI for selecting school year database and training AI models
- * @author Arch Coles
- */
 public class SelectSchoolYear extends javax.swing.JFrame {
     private Training trainer;
     private Predict predictor;
@@ -20,9 +16,6 @@ public class SelectSchoolYear extends javax.swing.JFrame {
     private String selectedDatabase;
     private boolean modelTrained = false;
 
-    /**
-     * Creates new form SelectSchoolYear
-     */
     public SelectSchoolYear() {
         initComponents();
         trainer = new Training();
@@ -238,9 +231,6 @@ public class SelectSchoolYear extends javax.swing.JFrame {
                 JOptionPane.INFORMATION_MESSAGE);
     }//GEN-LAST:event_jButton1ActionPerformed
 
-    /**
-     * Load all available school year databases from MySQL
-     */
     private void loadAvailableDatabases() {
         try {
             availableDatabases.clear();
@@ -272,9 +262,6 @@ public class SelectSchoolYear extends javax.swing.JFrame {
         }
     }
 
-    /**
-     * Display model information in the text area
-     */
     private void displayModelInfo() {
         try {
             String modelInfo = "Database: " + selectedDatabase + "\n\n";
@@ -295,9 +282,6 @@ public class SelectSchoolYear extends javax.swing.JFrame {
         }
     }
 
-    /**
-     * Clear model information display
-     */
     private void clearModelInfo() {
         modelInfoTextArea.setText("Model Information will appear here...");
         DefaultTableModel model = (DefaultTableModel) predictionTable.getModel();

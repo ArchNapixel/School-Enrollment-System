@@ -11,11 +11,6 @@ import weka.core.Instances;
 import weka.core.SerializationHelper;
 import java.io.File;
 
-/**
- * Predict class for making predictions using trained AI models
- * Uses previously trained Weka models to predict recommended subjects for students
- * @author Arch Coles
- */
 public class Predict extends ColesEnrollmentSystem {
     private Classifier classifier;
     private Instances dataset;
@@ -30,11 +25,6 @@ public class Predict extends ColesEnrollmentSystem {
         DBConnect();
     }
     
-    /**
-     * Load a trained model from disk
-     * @param databaseName The school year database name
-     * @return True if model loaded successfully, false otherwise
-     */
     public boolean loadModel(String databaseName) {
         try {
             modelPath = MODELS_DIR + File.separator + "model_" + databaseName + ".model";
@@ -56,14 +46,6 @@ public class Predict extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Predict recommended subjects for a student based on their profile
-     * Predicts which subjects the student should take for the current semester
-     * @param yearLevel The student's year level
-     * @param course The student's course
-     * @param numSubjectsEnrolled Number of subjects currently enrolled
-     * @return Recommended subject code for the semester
-     */
     public String predictRecommendedSubject(String yearLevel, String course, double numSubjectsEnrolled) {
         try {
             if (classifier == null) {
@@ -136,12 +118,6 @@ public class Predict extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Get a default subject recommendation based on year level and course
-     * @param yearLevel The student's year level
-     * @param course The student's course
-     * @return A recommended subject code
-     */
     private String getDefaultSubjectRecommendation(String yearLevel, String course) {
         // Simple logic: recommend subjects based on year level
         if (yearLevel.contains("1") || yearLevel.contains("First")) {
@@ -155,14 +131,6 @@ public class Predict extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Predict recommended subjects for a student and get probability distribution
-     * Shows confidence levels for each subject recommendation
-     * @param yearLevel The student's year level
-     * @param course The student's course
-     * @param numSubjectsEnrolled Number of subjects currently enrolled
-     * @return Array of probabilities for each subject
-     */
     public double[] getPredictionProbabilities(String yearLevel, String course, double numSubjectsEnrolled) {
         try {
             if (classifier == null) {
@@ -207,10 +175,6 @@ public class Predict extends ColesEnrollmentSystem {
         }
     }
     
-    /**
-     * Get the current model path
-     * @return Path to the loaded model file
-     */
     public String getModelPath() {
         return modelPath;
     }
