@@ -1,6 +1,7 @@
 /*
  * AI Model Training and Prediction Class
  * Responsible for training models and making predictions using Weka
+ * Also handles subject recommendations for student enrollment
  */
 package com.mycompany.colesenrollmentsystem;
 
@@ -12,6 +13,12 @@ import weka.core.Instances;
 import weka.core.SerializationHelper;
 import javax.swing.JOptionPane;
 import java.io.File;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Predict class - Trains AI models and makes predictions
@@ -25,6 +32,7 @@ public class Predict {
     private Instances trainingData;
     private String modelDirectory = "models/";
     private String selectedDatabase;
+    private Classifier trainedModel;
     
     /**
      * Initialize predictor with training data
@@ -35,12 +43,20 @@ public class Predict {
         this.decisionTreeModel = null;
         this.naiveBayesModel = null;
         this.logisticRegressionModel = null;
+        this.trainedModel = null;
         
         // Create models directory if it doesn't exist
         File dir = new File(modelDirectory);
         if (!dir.exists()) {
             dir.mkdir();
         }
+    }
+    
+    /**
+     * Empty constructor for loading pre-trained models
+     */
+    public Predict() {
+        this(null, "");
     }
     
     /**
@@ -130,6 +146,40 @@ public class Predict {
     }
     
     /**
+     * Load trained model from a specific database
+     */
+    public boolean loadTrainedModel(String database) {
+        try {
+            String modelPath = modelDirectory + database + "_enrollment_model.model";
+            File modelFile = new File(modelPath);
+            
+            if (modelFile.exists()) {
+                trainedModel = (Classifier) SerializationHelper.read(modelPath);
+                System.out.println("Trained model loaded from: " + modelPath);
+                return true;
+            } else {
+                System.out.println("Model file not found: " + modelPath);
+                return false;
+            }
+        } catch (Exception ex) {
+            System.out.println("Error loading trained model: " + ex.getMessage());
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    
+    /**
+     * Load trained model (uses last trained database)
+     */
+    public boolean loadTrainedModel() {
+        if (selectedDatabase == null || selectedDatabase.isEmpty()) {
+            System.out.println("No database selected for model loading");
+            return false;
+        }
+        return loadTrainedModel(selectedDatabase);
+    }
+    
+    /**
      * Make prediction using Decision Tree
      */
     public String predictWithDecisionTree(double[] instance) throws Exception {
@@ -182,5 +232,216 @@ public class Predict {
         } catch (Exception ex) {
             return "Error calculating accuracies: " + ex.getMessage();
         }
+    }
+    
+    /**
+     * Predict recommended subjects for a student based on their profile and enrollment patterns
+     * @param studentID the student ID
+     * @return List of recommended subject IDs
+     */
+    public List<Integer> predictSubjectsForStudent(int studentID) {
+        List<Integer> recommendedSubjects = new ArrayList<>();
+        
+        try {
+            ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+            system.DBConnect();
+            
+            // Get student info
+            String studentQuery = "SELECT YearLevel, Course FROM StudentsTable WHERE studentid = ?";
+            PreparedStatement ps = system.con.prepareStatement(studentQuery);
+            ps.setInt(1, studentID);
+            ResultSet rs = ps.executeQuery();
+            
+            if (!rs.next()) {
+                System.out.println("Student not found");
+                return recommendedSubjects;
+            }
+            
+            String yearLevel = rs.getString("YearLevel");
+            String course = rs.getString("Course");
+            ps.close();
+            
+            // Get subjects already enrolled by this student
+            String enrolledQuery = "SELECT subjid FROM Enroll WHERE studid = ?";
+            ps = system.con.prepareStatement(enrolledQuery);
+            ps.setInt(1, studentID);
+            rs = ps.executeQuery();
+            
+            List<Integer> alreadyEnrolled = new ArrayList<>();
+            while (rs.next()) {
+                alreadyEnrolled.add(rs.getInt("subjid"));
+            }
+            ps.close();
+            
+            // Find subjects taken by students with same year level and course
+            // who have higher grades (suggesting appropriate difficulty)
+            String inClause = buildInClause(alreadyEnrolled);
+            String recommendQuery = 
+                "SELECT DISTINCT s.subjid, COUNT(*) as popularity " +
+                "FROM SubjectsTable s " +
+                "INNER JOIN Enroll e ON s.subjid = e.subjid " +
+                "INNER JOIN Grades g ON e.eid = g.eid " +
+                "INNER JOIN StudentsTable st ON e.studid = st.studentid " +
+                "WHERE st.YearLevel = ? " +
+                "AND st.Course = ? " +
+                "AND CAST(g.final AS DECIMAL(5,2)) >= 75 " +
+                "AND s.subjid NOT IN (" + inClause + ") " +
+                "GROUP BY s.subjid " +
+                "ORDER BY popularity DESC " +
+                "LIMIT 5";
+            
+            ps = system.con.prepareStatement(recommendQuery);
+            ps.setString(1, yearLevel);
+            ps.setString(2, course);
+            rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                recommendedSubjects.add(rs.getInt("subjid"));
+            }
+            ps.close();
+            
+            // If no recommendations found based on grades, get all available subjects
+            // not yet enrolled by the student
+            if (recommendedSubjects.isEmpty()) {
+                String fallbackQuery = 
+                    "SELECT subjid FROM SubjectsTable " +
+                    "WHERE subjid NOT IN (" + inClause + ") " +
+                    "LIMIT 5";
+                
+                ps = system.con.prepareStatement(fallbackQuery);
+                rs = ps.executeQuery();
+                
+                while (rs.next()) {
+                    recommendedSubjects.add(rs.getInt("subjid"));
+                }
+                ps.close();
+            }
+            
+        } catch (Exception ex) {
+            System.out.println("Error predicting subjects: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        
+        return recommendedSubjects;
+    }
+    
+    /**
+     * Get detailed subject information for recommended subjects
+     * @param subjectIDs list of subject IDs
+     * @return Map of subject ID to subject details
+     */
+    public Map<Integer, SubjectDetail> getSubjectDetails(List<Integer> subjectIDs) {
+        Map<Integer, SubjectDetail> subjectMap = new HashMap<>();
+        
+        if (subjectIDs.isEmpty()) {
+            return subjectMap;
+        }
+        
+        try {
+            ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+            system.DBConnect();
+            
+            String inClause = buildInClause(subjectIDs);
+            String query = "SELECT subjid, subjcode, subjdescription, subjschedule, subjunit " +
+                          "FROM SubjectsTable WHERE subjid IN (" + inClause + ")";
+            
+            PreparedStatement ps = system.con.prepareStatement(query);
+            ResultSet rs = ps.executeQuery();
+            
+            while (rs.next()) {
+                int subjid = rs.getInt("subjid");
+                SubjectDetail info = new SubjectDetail(
+                    subjid,
+                    rs.getString("subjcode"),
+                    rs.getString("subjdescription"),
+                    rs.getString("subjschedule"),
+                    rs.getInt("subjunit")
+                );
+                subjectMap.put(subjid, info);
+            }
+            ps.close();
+            
+        } catch (Exception ex) {
+            System.out.println("Error getting subject details: " + ex.getMessage());
+        }
+        
+        return subjectMap;
+    }
+    
+    /**
+     * Helper method to build IN clause for SQL queries
+     */
+    private String buildInClause(List<Integer> ids) {
+        if (ids.isEmpty()) {
+            return "NULL";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < ids.size(); i++) {
+            if (i > 0) sb.append(",");
+            sb.append(ids.get(i));
+        }
+        return sb.toString();
+    }
+    
+    /**
+     * Inner class to hold subject information
+     */
+    public static class SubjectDetail {
+        public int subjid;
+        public String subjcode;
+        public String subjdescription;
+        public String subjschedule;
+        public int subjunit;
+        
+        public SubjectDetail(int subjid, String subjcode, String subjdescription, 
+                            String subjschedule, int subjunit) {
+            this.subjid = subjid;
+            this.subjcode = subjcode;
+            this.subjdescription = subjdescription;
+            this.subjschedule = subjschedule;
+            this.subjunit = subjunit;
+        }
+        
+        @Override
+        public String toString() {
+            return subjcode + " - " + subjdescription + " (" + subjunit + " units)";
+        }
+    }
+    
+    /**
+     * Set reference dataset for predictions
+     */
+    public void setReferenceDataset(Instances dataset) {
+        this.trainingData = dataset;
+    }
+    
+    /**
+     * Predict subjects for a student using the trained model
+     */
+    public ArrayList<String> predictStudentSubjects(int studentID) {
+        ArrayList<String> predictedSubjects = new ArrayList<>();
+        
+        try {
+            if (trainedModel == null) {
+                System.out.println("Error: Trained model not loaded");
+                return predictedSubjects;
+            }
+            
+            // Use the predictSubjectsForStudent method that uses database queries
+            List<Integer> subjectIDs = predictSubjectsForStudent(studentID);
+            Map<Integer, SubjectDetail> details = getSubjectDetails(subjectIDs);
+            
+            for (Integer subjid : subjectIDs) {
+                SubjectDetail detail = details.get(subjid);
+                if (detail != null) {
+                    predictedSubjects.add(detail.toString());
+                }
+            }
+        } catch (Exception ex) {
+            System.out.println("Error predicting subjects: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        
+        return predictedSubjects;
     }
 }

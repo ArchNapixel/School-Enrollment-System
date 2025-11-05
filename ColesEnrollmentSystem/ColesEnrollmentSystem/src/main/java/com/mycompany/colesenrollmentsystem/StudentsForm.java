@@ -958,11 +958,80 @@ public class StudentsForm extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem6ActionPerformed
 
     private void AIEnrollbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_AIEnrollbuttonActionPerformed
-        // TODO add your handling code here:
+        if (studid.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a student first.", "No Student Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int studentID = Integer.parseInt(studid.getText());
+            
+            // Use Predict class to get recommended subjects
+            Predict predictor = new Predict(null, "");
+            java.util.List<Integer> recommendedSubjectIDs = predictor.predictSubjectsForStudent(studentID);
+            
+            // Limit to 5 subjects
+            if (recommendedSubjectIDs.size() > 5) {
+                recommendedSubjectIDs = recommendedSubjectIDs.subList(0, 5);
+            }
+            
+            if (recommendedSubjectIDs.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "No subjects available for enrollment.", 
+                    "No Subjects", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            
+            // Get detailed information about recommended subjects
+            java.util.Map<Integer, Predict.SubjectDetail> subjectDetails = 
+                predictor.getSubjectDetails(recommendedSubjectIDs);
+            
+            // Build a string with all recommendations
+            StringBuilder recommendations = new StringBuilder();
+            recommendations.append("AI will assign Student ").append(studentID).append(" to the following subjects:\n\n");
+            
+            int count = 1;
+            for (Integer subjid : recommendedSubjectIDs) {
+                Predict.SubjectDetail info = subjectDetails.get(subjid);
+                if (info != null) {
+                    recommendations.append(count).append(". ").append(info).append("\n");
+                    count++;
+                }
+            }
+            
+            int choice = JOptionPane.showConfirmDialog(this, recommendations.toString(), 
+                "AI Enrollment - Assign 5 Subjects", JOptionPane.YES_NO_OPTION);
+            
+            if (choice == JOptionPane.YES_OPTION) {
+                int enrolledCount = 0;
+                for (Integer subjid : recommendedSubjectIDs) {
+                    enrolledHandler.setsubjid(subjid);
+                    String result = enrolledHandler.enrollStud(studentID);
+                    if (result.contains("successfully")) {
+                        enrolledCount++;
+                    } else if (result.contains("already enrolled")) {
+                        enrolledCount++; // Count already enrolled as success
+                    }
+                }
+                
+                JOptionPane.showMessageDialog(this, "Successfully assigned " + enrolledCount + 
+                    " subjects to Student " + studentID, "Enrollment Complete", JOptionPane.INFORMATION_MESSAGE);
+                
+                ShowEnrollRec();
+                if (subjectsFormInstance != null) {
+                    subjectsFormInstance.ShowClassList();
+                }
+            }
+            
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid student ID.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_AIEnrollbuttonActionPerformed
 
     private void trainenrolledsubjectsmenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_trainenrolledsubjectsmenuActionPerformed
-        // TODO add your handling code here:
+        // Open SelectSchoolYear form to choose database for training
+        SelectSchoolYear schoolYearForm = new SelectSchoolYear();
+        schoolYearForm.setVisible(true);
+        schoolYearForm.setLocationRelativeTo(this);
     }//GEN-LAST:event_trainenrolledsubjectsmenuActionPerformed
     
     private void ShowEnrollRec() {

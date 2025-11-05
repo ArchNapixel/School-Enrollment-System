@@ -30,7 +30,7 @@ public class Training extends ColesEnrollmentSystem {
         this.selectedDatabase = database;
         this.trainingData = null;
         this.classifier = new NaiveBayes();
-        this.modelFilePath = "enrollment_model.model";
+        this.modelFilePath = "models/" + database + "_enrollment_model.model";
         DBConnect();
     }
     
@@ -159,10 +159,38 @@ public class Training extends ColesEnrollmentSystem {
      */
     public void saveModel() {
         try {
+            // Create models directory if it doesn't exist
+            java.io.File dir = new java.io.File("models");
+            if (!dir.exists()) {
+                dir.mkdir();
+            }
+            
             SerializationHelper.write(modelFilePath, classifier);
             System.out.println("Model saved to: " + modelFilePath);
+            
+            // Also save the training data as ARFF file
+            saveTrainingDataAsARFF();
         } catch (Exception ex) {
             System.out.println("Error saving model: " + ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+    
+    /**
+     * Save training data as ARFF (Attribute-Relation File Format) for Weka
+     */
+    public void saveTrainingDataAsARFF() {
+        try {
+            String arffFilePath = "models/" + selectedDatabase + "_enrollment.arff";
+            java.io.BufferedWriter writer = new java.io.BufferedWriter(
+                new java.io.FileWriter(arffFilePath));
+            
+            writer.write(trainingData.toString());
+            writer.close();
+            
+            System.out.println("Training data saved as ARFF to: " + arffFilePath);
+        } catch (Exception ex) {
+            System.out.println("Error saving ARFF file: " + ex.getMessage());
             ex.printStackTrace();
         }
     }

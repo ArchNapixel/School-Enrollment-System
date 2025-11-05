@@ -113,7 +113,7 @@ public class SelectSchoolYear extends javax.swing.JFrame {
 
     private void SelectschoolyearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SelectschoolyearbuttonActionPerformed
         String selectedDB = (String) selectschoolyearcombobox.getSelectedItem();
-        if (selectedDB == null || selectedDB.isEmpty()) {
+        if (selectedDB == null || selectedDB.isEmpty() || selectedDB.equals("school year")) {
             JOptionPane.showMessageDialog(this, "Please select a database");
             return;
         }
@@ -121,24 +121,8 @@ public class SelectSchoolYear extends javax.swing.JFrame {
         // Set the selected database
         ColesEnrollmentSystem.db = selectedDB;
         
-        // Show options dialog
-        Object[] options = {"Train AI Model", "Make Prediction", "Cancel"};
-        int choice = JOptionPane.showOptionDialog(this,
-                "What would you like to do with database: " + selectedDB + "?",
-                "AI Model Options",
-                JOptionPane.YES_NO_CANCEL_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                options,
-                options[0]);
-        
-        if (choice == 0) {
-            // Train AI Model
-            trainAIModel(selectedDB);
-        } else if (choice == 1) {
-            // Make Prediction
-            makePrediction(selectedDB);
-        }
+        // Train AI Model
+        trainAIModel(selectedDB);
     }
     
     /**
@@ -162,16 +146,21 @@ public class SelectSchoolYear extends javax.swing.JFrame {
                     // Train classifier
                     trainingModule.trainClassifier();
                     
-                    // Save model
+                    // Save model and ARFF file
                     trainingModule.saveModel();
                     
                     JOptionPane.showMessageDialog(SelectSchoolYear.this,
                         "Training Completed Successfully!\n\n" +
                         "Database: " + selectedDB + "\n" +
                         "Records Used: " + records + "\n" +
-                        "Model Saved: enrollment_model.model\n\n" +
-                        "You can now make predictions!",
+                        "Files Generated:\n" +
+                        "  • " + selectedDB + "_enrollment.arff\n" +
+                        "  • " + selectedDB + "_enrollment_model.model\n\n" +
+                        "You can now use AI ENROLL to assign subjects to students!",
                         "Training Complete", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    // Close this form after training
+                    SelectSchoolYear.this.dispose();
                     
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(SelectSchoolYear.this,
@@ -183,53 +172,6 @@ public class SelectSchoolYear extends javax.swing.JFrame {
         }).start();
     }
     
-    /**
-     * Make prediction for a student
-     */
-    private void makePrediction(String selectedDB) {
-        String studentIdStr = JOptionPane.showInputDialog(this, "Enter Student ID to predict subjects:");
-        if (studentIdStr == null || studentIdStr.isEmpty()) {
-            return;
-        }
-        
-        try {
-            int studentId = Integer.parseInt(studentIdStr);
-            
-            // Load model and make prediction
-            predictModule = new Predict();
-            predictModule.loadTrainedModel();
-            
-            // Need training data for prediction context
-            trainingModule = new Training(selectedDB);
-            trainingModule.collectEnrollmentData();
-            predictModule.setReferenceDataset(trainingModule.getTrainingData());
-            
-            java.util.ArrayList<String> predictedSubjects = predictModule.predictStudentSubjects(studentId);
-            
-            if (predictedSubjects.isEmpty()) {
-                JOptionPane.showMessageDialog(this,
-                    "No subjects predicted for Student " + studentId,
-                    "Prediction Result", JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                StringBuilder result = new StringBuilder();
-                result.append("Predicted Subjects for Student ").append(studentId).append(":\n\n");
-                for (String subject : predictedSubjects) {
-                    result.append("  • ").append(subject).append("\n");
-                }
-                JOptionPane.showMessageDialog(this, result.toString(),
-                    "Prediction Results", JOptionPane.INFORMATION_MESSAGE);
-            }
-            
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid Student ID format");
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this,
-                "Error during prediction: " + ex.getMessage(),
-                "Prediction Error", JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
-    }//GEN-LAST:event_SelectschoolyearbuttonActionPerformed
-
     /**
      * @param args the command line arguments
      */
