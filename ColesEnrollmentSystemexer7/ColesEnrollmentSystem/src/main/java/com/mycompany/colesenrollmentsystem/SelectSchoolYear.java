@@ -4,17 +4,45 @@
  */
 package com.mycompany.colesenrollmentsystem;
 
+import java.sql.ResultSet;
+import javax.swing.JOptionPane;
+
 /**
- *
+ * SelectSchoolYear - AI Training and Prediction Form
  * @author Arch Coles
  */
 public class SelectSchoolYear extends javax.swing.JFrame {
+    
+    private Training trainingModule;
+    private Predict predictModule;
 
     /**
      * Creates new form SelectSchoolYear
      */
     public SelectSchoolYear() {
         initComponents();
+        loadDatabases();
+    }
+    
+    /**
+     * Load available databases from the system
+     */
+    private void loadDatabases() {
+        try {
+            selectschoolyearcombobox.removeAllItems();
+            ResultSet rs = ColesEnrollmentSystem.st.executeQuery("SHOW DATABASES;");
+            while (rs.next()) {
+                String db = rs.getString(1);
+                if (!(db.equalsIgnoreCase("mysql")
+                        || db.equalsIgnoreCase("performance_schema")
+                        || db.equalsIgnoreCase("information_schema")
+                        || db.equalsIgnoreCase("sys"))) {
+                    selectschoolyearcombobox.addItem(db);
+                }
+            }
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Error loading databases: " + ex.getMessage());
+        }
     }
 
     /**
@@ -84,7 +112,122 @@ public class SelectSchoolYear extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void SelectschoolyearbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_SelectschoolyearbuttonActionPerformed
-        // TODO add your handling code here:
+        String selectedDB = (String) selectschoolyearcombobox.getSelectedItem();
+        if (selectedDB == null || selectedDB.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a database");
+            return;
+        }
+        
+        // Set the selected database
+        ColesEnrollmentSystem.db = selectedDB;
+        
+        // Show options dialog
+        Object[] options = {"Train AI Model", "Make Prediction", "Cancel"};
+        int choice = JOptionPane.showOptionDialog(this,
+                "What would you like to do with database: " + selectedDB + "?",
+                "AI Model Options",
+                JOptionPane.YES_NO_CANCEL_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]);
+        
+        if (choice == 0) {
+            // Train AI Model
+            trainAIModel(selectedDB);
+        } else if (choice == 1) {
+            // Make Prediction
+            makePrediction(selectedDB);
+        }
+    }
+    
+    /**
+     * Train AI model on selected database
+     */
+    private void trainAIModel(String selectedDB) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    JOptionPane.showMessageDialog(SelectSchoolYear.this, 
+                        "Starting AI training on database: " + selectedDB + "\nThis may take a moment...",
+                        "Training Started", JOptionPane.INFORMATION_MESSAGE);
+                    
+                    trainingModule = new Training(selectedDB);
+                    
+                    // Collect data
+                    trainingModule.collectEnrollmentData();
+                    int records = trainingModule.getTrainingData().numInstances();
+                    
+                    // Train classifier
+                    trainingModule.trainClassifier();
+                    
+                    // Save model
+                    trainingModule.saveModel();
+                    
+                    JOptionPane.showMessageDialog(SelectSchoolYear.this,
+                        "Training Completed Successfully!\n\n" +
+                        "Database: " + selectedDB + "\n" +
+                        "Records Used: " + records + "\n" +
+                        "Model Saved: enrollment_model.model\n\n" +
+                        "You can now make predictions!",
+                        "Training Complete", JOptionPane.INFORMATION_MESSAGE);
+                    
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(SelectSchoolYear.this,
+                        "Error during training: " + ex.getMessage(),
+                        "Training Error", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
+                }
+            }
+        }).start();
+    }
+    
+    /**
+     * Make prediction for a student
+     */
+    private void makePrediction(String selectedDB) {
+        String studentIdStr = JOptionPane.showInputDialog(this, "Enter Student ID to predict subjects:");
+        if (studentIdStr == null || studentIdStr.isEmpty()) {
+            return;
+        }
+        
+        try {
+            int studentId = Integer.parseInt(studentIdStr);
+            
+            // Load model and make prediction
+            predictModule = new Predict();
+            predictModule.loadTrainedModel();
+            
+            // Need training data for prediction context
+            trainingModule = new Training(selectedDB);
+            trainingModule.collectEnrollmentData();
+            predictModule.setReferenceDataset(trainingModule.getTrainingData());
+            
+            java.util.ArrayList<String> predictedSubjects = predictModule.predictStudentSubjects(studentId);
+            
+            if (predictedSubjects.isEmpty()) {
+                JOptionPane.showMessageDialog(this,
+                    "No subjects predicted for Student " + studentId,
+                    "Prediction Result", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                StringBuilder result = new StringBuilder();
+                result.append("Predicted Subjects for Student ").append(studentId).append(":\n\n");
+                for (String subject : predictedSubjects) {
+                    result.append("  • ").append(subject).append("\n");
+                }
+                JOptionPane.showMessageDialog(this, result.toString(),
+                    "Prediction Results", JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid Student ID format");
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "Error during prediction: " + ex.getMessage(),
+                "Prediction Error", JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
     }//GEN-LAST:event_SelectschoolyearbuttonActionPerformed
 
     /**

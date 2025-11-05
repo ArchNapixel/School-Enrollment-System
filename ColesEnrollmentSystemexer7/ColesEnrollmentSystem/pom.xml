@@ -61,6 +61,13 @@
             <artifactId>slf4j-simple</artifactId>
             <version>1.7.36</version>
         </dependency>
+        
+        <!-- Weka for Machine Learning -->
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-stable</artifactId>
+            <version>3.8.6</version>
+        </dependency>
     </dependencies>
     <name>ColesEnrollmentSystem</name>
 </project>
