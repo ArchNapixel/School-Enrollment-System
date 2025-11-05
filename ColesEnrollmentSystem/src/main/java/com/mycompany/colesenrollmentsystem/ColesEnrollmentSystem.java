@@ -28,8 +28,8 @@ public class ColesEnrollmentSystem {
     public static void main(String[] args) {
         db = "";
         DBConnect();
-        StudentsForm a = new StudentsForm();
-        a.setVisible(true);
+        Login login = new Login();
+        login.setVisible(true);
     }
     
     public static void DBConnect() {
@@ -38,7 +38,7 @@ public class ColesEnrollmentSystem {
         
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://192.168.254.113:3306/" + db + "?zeroDateTimeBehavior=CONVERT_TO_NULL",uname,pswd); // home IP
+            con = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/" + db + "?zeroDateTimeBehavior=CONVERT_TO_NULL",uname,pswd); // localhost
             //con = DriverManager.getConnection("jdbc:mysql://10.4.44.40:3306/" + db + "?zeroDateTimeBehavior=CONVERT_TO_NULL",uname,pswd); // lab IP
             st = con.createStatement();
             System.out.println("CONNECTED SUCCESFULLY TO THE DATABASE");
