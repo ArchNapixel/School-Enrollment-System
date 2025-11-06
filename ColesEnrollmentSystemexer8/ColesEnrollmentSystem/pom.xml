@@ -68,6 +68,27 @@
             <artifactId>weka-stable</artifactId>
             <version>3.8.6</version>
         </dependency>
+        
+        <!-- Weka core classifiers (explicit) -->
+        <dependency>
+            <groupId>nz.ac.waikato.cms.weka</groupId>
+            <artifactId>weka-src</artifactId>
+            <version>3.8.6</version>
+        </dependency>
+        
+        <!-- Java cup for Weka -->
+        <dependency>
+            <groupId>net.sf.java-cup</groupId>
+            <artifactId>java-cup</artifactId>
+            <version>11a</version>
+        </dependency>
+        
+        <!-- JAMA for linear algebra (used by Weka) -->
+        <dependency>
+            <groupId>gov.nist.math</groupId>
+            <artifactId>jama</artifactId>
+            <version>1.0.3</version>
+        </dependency>
     </dependencies>
     <name>ColesEnrollmentSystem</name>
 </project>

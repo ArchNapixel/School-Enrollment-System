@@ -373,7 +373,7 @@ public class Predict {
      */
     private String buildInClause(List<Integer> ids) {
         if (ids.isEmpty()) {
-            return "NULL";
+            return "-1";  // Return -1 which will never match any ID
         }
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < ids.size(); i++) {

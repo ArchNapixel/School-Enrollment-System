@@ -287,6 +287,9 @@ public class StudentsForm extends javax.swing.JFrame {
                 "Student ID", "Student Name", "Student Address", "Student Contact", "Student Email", "Student Course", "Student Gender", "Student Year Level"
             }
         ));
+        students.getTableHeader().setResizingAllowed(true);
+        students.getTableHeader().setReorderingAllowed(true);
+        students.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         students.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 studentsMouseClicked(evt);
@@ -305,6 +308,9 @@ public class StudentsForm extends javax.swing.JFrame {
                 "Subject ID", "Subject Code", "Subject Description", "Subject Schedule", "Subject Units"
             }
         ));
+        enrolltable.getTableHeader().setResizingAllowed(true);
+        enrolltable.getTableHeader().setReorderingAllowed(true);
+        enrolltable.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_OFF);
         jScrollPane2.setViewportView(enrolltable);
 
         dblabel.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
@@ -410,6 +416,11 @@ public class StudentsForm extends javax.swing.JFrame {
 
         ConflictSchedulemenuitem.setSelected(true);
         ConflictSchedulemenuitem.setText("Conflict Schedule");
+        ConflictSchedulemenuitem.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ConflictSchedulemenuitemActionPerformed(evt);
+            }
+        });
         jMenu3.add(ConflictSchedulemenuitem);
 
         jMenuBar1.add(jMenu3);
@@ -1039,6 +1050,186 @@ public class StudentsForm extends javax.swing.JFrame {
         schoolYearForm.setLocationRelativeTo(this);
     }//GEN-LAST:event_trainenrolledsubjectsmenuActionPerformed
     
+    private void ConflictSchedulemenuitemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ConflictSchedulemenuitemActionPerformed
+        if (studid.getText().isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please select a student first.", "No Student Selected", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            int studentID = Integer.parseInt(studid.getText());
+            checkScheduleConflicts(studentID);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid student ID.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }//GEN-LAST:event_ConflictSchedulemenuitemActionPerformed
+    
+    private void checkScheduleConflicts(int studentID) {
+        try {
+            ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+            system.DBConnect();
+            
+            // Get all enrolled subjects and their schedules for the student
+            String query = "SELECT s.subjid, s.subjcode, s.subjschedule " +
+                          "FROM SubjectsTable s " +
+                          "INNER JOIN Enroll e ON s.subjid = e.subjid " +
+                          "WHERE e.studid = ? " +
+                          "ORDER BY s.subjschedule";
+            
+            PreparedStatement ps = system.con.prepareStatement(query);
+            ps.setInt(1, studentID);
+            ResultSet rs = ps.executeQuery();
+            
+            java.util.List<ScheduleInfo> schedules = new java.util.ArrayList<>();
+            while (rs.next()) {
+                int subjid = rs.getInt("subjid");
+                String subjcode = rs.getString("subjcode");
+                String schedule = rs.getString("subjschedule");
+                schedules.add(new ScheduleInfo(subjid, subjcode, schedule));
+            }
+            ps.close();
+            
+            if (schedules.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Student has no enrolled subjects.", 
+                    "No Schedules", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            
+            // Check for conflicts
+            StringBuilder conflictReport = new StringBuilder();
+            conflictReport.append("SCHEDULE CONFLICT REPORT\n");
+            conflictReport.append("Student ID: ").append(studentID).append("\n");
+            conflictReport.append("================================\n\n");
+            
+            java.util.List<String> conflicts = findConflicts(schedules);
+            
+            if (conflicts.isEmpty()) {
+                conflictReport.append("✓ NO SCHEDULE CONFLICTS FOUND\n\n");
+                conflictReport.append("Enrolled Subjects:\n");
+                for (ScheduleInfo s : schedules) {
+                    conflictReport.append("  • ").append(s.subjcode).append(" - ").append(s.schedule).append("\n");
+                }
+            } else {
+                conflictReport.append("✗ SCHEDULE CONFLICTS DETECTED:\n\n");
+                for (String conflict : conflicts) {
+                    conflictReport.append("  ⚠ ").append(conflict).append("\n");
+                }
+                conflictReport.append("\nEnrolled Subjects:\n");
+                for (ScheduleInfo s : schedules) {
+                    conflictReport.append("  • ").append(s.subjcode).append(" - ").append(s.schedule).append("\n");
+                }
+            }
+            
+            JOptionPane.showMessageDialog(this, conflictReport.toString(), 
+                "Schedule Conflict Check", JOptionPane.INFORMATION_MESSAGE);
+            
+        } catch (Exception ex) {
+            System.out.println("Error checking schedule conflicts: " + ex.getMessage());
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Error checking conflicts: " + ex.getMessage(), 
+                "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private java.util.List<String> findConflicts(java.util.List<ScheduleInfo> schedules) {
+        java.util.List<String> conflicts = new java.util.ArrayList<>();
+        
+        for (int i = 0; i < schedules.size(); i++) {
+            for (int j = i + 1; j < schedules.size(); j++) {
+                ScheduleInfo s1 = schedules.get(i);
+                ScheduleInfo s2 = schedules.get(j);
+                
+                if (hasTimeConflict(s1, s2)) {
+                    conflicts.add(s1.subjcode + " conflicts with " + s2.subjcode);
+                }
+            }
+        }
+        
+        return conflicts;
+    }
+    
+    private boolean hasTimeConflict(ScheduleInfo s1, ScheduleInfo s2) {
+        // Parse schedules: Format "MWF 08:20-09:20" or "TTH 10:30-11:30"
+        String[] parts1 = s1.schedule.split(" ");
+        String[] parts2 = s2.schedule.split(" ");
+        
+        if (parts1.length < 2 || parts2.length < 2) {
+            return false;
+        }
+        
+        String days1 = parts1[0];
+        String days2 = parts2[0];
+        String time1 = parts1[1];
+        String time2 = parts2[1];
+        
+        // Check if days overlap
+        if (!daysOverlap(days1, days2)) {
+            return false;
+        }
+        
+        // Check if times overlap
+        return timesOverlap(time1, time2);
+    }
+    
+    private boolean daysOverlap(String days1, String days2) {
+        // days1 and days2 are like "MWF" or "TTH"
+        for (char c : days1.toCharArray()) {
+            if (days2.indexOf(c) >= 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private boolean timesOverlap(String time1, String time2) {
+        // time1 and time2 are like "08:20-09:20"
+        String[] range1 = time1.split("-");
+        String[] range2 = time2.split("-");
+        
+        if (range1.length < 2 || range2.length < 2) {
+            return false;
+        }
+        
+        int start1 = timeToMinutes(range1[0]);
+        int end1 = timeToMinutes(range1[1]);
+        int start2 = timeToMinutes(range2[0]);
+        int end2 = timeToMinutes(range2[1]);
+        
+        // Check if time ranges overlap
+        return !(end1 <= start2 || end2 <= start1);
+    }
+    
+    private int timeToMinutes(String time) {
+        // Convert "HH:MM" to minutes since midnight
+        String[] parts = time.split(":");
+        if (parts.length < 2) {
+            return 0;
+        }
+        try {
+            int hours = Integer.parseInt(parts[0]);
+            int minutes = Integer.parseInt(parts[1]);
+            return hours * 60 + minutes;
+        } catch (NumberFormatException ex) {
+            return 0;
+        }
+    }
+    
+    /**
+     * Inner class to hold schedule information
+     */
+    private static class ScheduleInfo {
+        int subjid;
+        String subjcode;
+        String schedule;
+        
+        ScheduleInfo(int subjid, String subjcode, String schedule) {
+            this.subjid = subjid;
+            this.subjcode = subjcode;
+            this.schedule = schedule;
+        }
+    }
+    
+
     private void ShowEnrollRec() {
         if (studid.getText().isEmpty()) {
             return;
