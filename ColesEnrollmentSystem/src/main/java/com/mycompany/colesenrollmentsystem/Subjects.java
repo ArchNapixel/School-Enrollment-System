@@ -4,9 +4,6 @@
  */
 package com.mycompany.colesenrollmentsystem;
 
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.DBConnect;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.st;
-
 /**
  *
  * @author Arch Coles

@@ -346,10 +346,13 @@ public class GradesForm extends javax.swing.JFrame {
         query = String.format("select eid from Enroll where subjid = %d and studid = %d;",
             subjid, studentid);
 
+        ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+        system.DBConnect();
+
         try {
-            ColesEnrollmentSystem.rs = ColesEnrollmentSystem.st.executeQuery(query);
-            ColesEnrollmentSystem.rs.next();
-            enrollId = ColesEnrollmentSystem.rs.getInt("eid");
+            system.rs = system.st.executeQuery(query);
+            system.rs.next();
+            enrollId = system.rs.getInt("eid");
         } catch (Exception e) {
             System.out.println("failed to get enroll Id of student: " + e);
         }
@@ -358,20 +361,20 @@ public class GradesForm extends javax.swing.JFrame {
         + studentid + " and subjid = " + subjid + ")";
 
         try {
-            ColesEnrollmentSystem.rs = ColesEnrollmentSystem.st.executeQuery(query);
+            system.rs = system.st.executeQuery(query);
             int count = 0;
-            if (ColesEnrollmentSystem.rs.next()) count = ColesEnrollmentSystem.rs.getInt("count");
+            if (system.rs.next()) count = system.rs.getInt("count");
 
             if (count > 0) {
                 query = String.format("update Grades set Prelim = '%s', Midterm = '%s', Prefinal = '%s', Final = '%s' where"
                     + " eid = " + enrollId + ";",
                     prelim, midterm, prefinal, finalterm, enrollId);
-                ColesEnrollmentSystem.st.executeUpdate(query);
+                system.st.executeUpdate(query);
                 JOptionPane.showMessageDialog(null, String.format("Successfully updated grades of student %d", studentid));
             } else {
                 query = String.format("insert into Grades(eid, prelim, midterm, prefinal, final) values(%d, '%s', '%s', '%s', '%s')",
                     enrollId, prelim, midterm, prefinal, finalterm);
-                ColesEnrollmentSystem.st.executeUpdate(query);
+                system.st.executeUpdate(query);
                 JOptionPane.showMessageDialog(null, String.format("Successfully graded student %d", studentid));
             }
         } catch (Exception e) {
@@ -464,7 +467,8 @@ public class GradesForm extends javax.swing.JFrame {
     private void showRecords() {
         this.setTitle(ColesEnrollmentSystem.db);
         
-
+        ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+        system.DBConnect();
         
         // Table setup
         DefaultTableModel subjectsTableModel = (DefaultTableModel) subjectsTable.getModel();
@@ -478,15 +482,15 @@ public class GradesForm extends javax.swing.JFrame {
                     + "FROM SubjectsTable s "
                     + "WHERE s.subjid IN (SELECT subid FROM Assign WHERE tid = " + teachid + ")";
 
-            ColesEnrollmentSystem.rs = ColesEnrollmentSystem.st.executeQuery(query);
+            system.rs = system.st.executeQuery(query);
 
-            while (ColesEnrollmentSystem.rs.next()) {
-                String subjectID = ColesEnrollmentSystem.rs.getString("subjid");
-                String code = ColesEnrollmentSystem.rs.getString("subjcode");
-                String description = ColesEnrollmentSystem.rs.getString("subjdescription");
-                String schedule = ColesEnrollmentSystem.rs.getString("subjschedule");
-                String units = ColesEnrollmentSystem.rs.getString("subjunit");
-                String students = ColesEnrollmentSystem.rs.getString("students");
+            while (system.rs.next()) {
+                String subjectID = system.rs.getString("subjid");
+                String code = system.rs.getString("subjcode");
+                String description = system.rs.getString("subjdescription");
+                String schedule = system.rs.getString("subjschedule");
+                String units = system.rs.getString("subjunit");
+                String students = system.rs.getString("students");
 
                 String[] row = {subjectID, code, description, units, schedule, students};
                 subjectsTableModel.addRow(row);
@@ -510,15 +514,15 @@ public class GradesForm extends javax.swing.JFrame {
                     + "LEFT JOIN Grades g ON g.eid = e.eid "
                     + "WHERE e.subjid = " + subjid;
 
-            ColesEnrollmentSystem.rs = ColesEnrollmentSystem.st.executeQuery(query);
+            system.rs = system.st.executeQuery(query);
 
-            while (ColesEnrollmentSystem.rs.next()) {
-                String studentID = ColesEnrollmentSystem.rs.getString("studid");
-                String studentName = ColesEnrollmentSystem.rs.getString("name");
-                String prelim = ColesEnrollmentSystem.rs.getString("prelim");
-                String midterm = ColesEnrollmentSystem.rs.getString("midterm");
-                String prefinal = ColesEnrollmentSystem.rs.getString("prefinal");
-                String finalterm = ColesEnrollmentSystem.rs.getString("final");
+            while (system.rs.next()) {
+                String studentID = system.rs.getString("studid");
+                String studentName = system.rs.getString("name");
+                String prelim = system.rs.getString("prelim");
+                String midterm = system.rs.getString("midterm");
+                String prefinal = system.rs.getString("prefinal");
+                String finalterm = system.rs.getString("final");
 
                 String[] row = {studentID, studentName, prelim, midterm, prefinal, finalterm};
                 gradesTableModel.addRow(row);

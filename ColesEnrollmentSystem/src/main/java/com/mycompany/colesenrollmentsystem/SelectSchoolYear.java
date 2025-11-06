@@ -30,7 +30,9 @@ public class SelectSchoolYear extends javax.swing.JFrame {
     private void loadDatabases() {
         try {
             selectschoolyearcombobox.removeAllItems();
-            ResultSet rs = ColesEnrollmentSystem.st.executeQuery("SHOW DATABASES;");
+            ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+            system.DBConnect();
+            ResultSet rs = system.st.executeQuery("SHOW DATABASES;");
             while (rs.next()) {
                 String db = rs.getString(1);
                 if (!(db.equalsIgnoreCase("mysql")

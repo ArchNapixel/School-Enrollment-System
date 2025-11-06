@@ -4,8 +4,6 @@
  */
 package com.mycompany.colesenrollmentsystem;
 
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.DBConnect;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.st;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 

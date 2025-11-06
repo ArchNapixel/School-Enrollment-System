@@ -1,10 +1,5 @@
 package com.mycompany.colesenrollmentsystem;
 
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.con;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.db;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.pswd;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.st;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.uname;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -131,16 +126,16 @@ public class LoginForm extends javax.swing.JFrame {
         ColesEnrollmentSystem system = new ColesEnrollmentSystem();
 
         username = usernameinput.getText().trim();
-        password = passwordinput.getText().trim();
+        password = new String(passwordinput.getPassword()).trim();
 
         try {
             system.uname = username;
             system.pswd = password;
+            system.db = "mysql";
 
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://10.4.44.40:3306/" + db + "?zeroDateTimeBehavior=CONVERT_TO_NULL", uname, pswd);
-            st = con.createStatement();
-            System.out.println("CONNECTED: " + db);
+            system.DBConnect();
+            System.out.println("CONNECTED: " + system.db);
 
             // If DBConnect doesn't throw, assume login is successful
             isLoggedIn = true;
@@ -207,7 +202,7 @@ public class LoginForm extends javax.swing.JFrame {
             Class.forName("com.mysql.cj.jdbc.Driver");
             system.DBConnect();
 
-            ResultSet rs = st.executeQuery("SHOW GRANTS FOR CURRENT_USER");
+            ResultSet rs = system.st.executeQuery("SHOW GRANTS FOR CURRENT_USER");
 
             boolean canSelect = false;
             boolean canInsert = false;
@@ -236,12 +231,20 @@ public class LoginForm extends javax.swing.JFrame {
             }
             if (canSelect && canInsert && canUpdate && canDelete) {
                 // Admin / root UI
+                ColesEnrollmentSystem.db = database;
+                ColesEnrollmentSystem.uname = username;
+                ColesEnrollmentSystem.pswd = password;
+                
                 StudentsForm studForm = new StudentsForm();
                 studForm.setVisible(true);
                 this.setVisible(false);
 
             } else if (canSelect && canInsert && canUpdate && !canDelete) {
                 // Teacher UI → pass teacherId (userId)
+                ColesEnrollmentSystem.db = database;
+                ColesEnrollmentSystem.uname = username;
+                ColesEnrollmentSystem.pswd = password;
+                
                 GradesForm form = new GradesForm();
                 form.teachid = Integer.parseInt(username.substring(0, 4));
                 form.setLocationRelativeTo(null);

@@ -3,7 +3,6 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package com.mycompany.colesenrollmentsystem;
-import static com.mycompany.colesenrollmentsystem.ColesEnrollmentSystem.st;
 import java.awt.Desktop;
 import java.io.File;
 import java.sql.*;
@@ -583,14 +582,15 @@ public class StudentsForm extends javax.swing.JFrame {
     private void studentsMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_studentsMouseClicked
         int selectedRow = students.getSelectedRow();
         
+        // Table columns: "Student ID", "Student Name", "Student Address", "Student Contact", "Student Email", "Student Course", "Student Gender", "Student Year Level"
         String studentid = students.getValueAt(selectedRow, 0).toString();
         Name = students.getValueAt(selectedRow, 1).toString();
         String Address = students.getValueAt(selectedRow, 2).toString();
-        String Course = students.getValueAt(selectedRow, 3).toString();
-        String Gender = students.getValueAt(selectedRow, 4).toString();
-        String Yearlvl = students.getValueAt(selectedRow, 5).toString();
-        String Contact = students.getValueAt(selectedRow, 6).toString();
-        String email = students.getValueAt(selectedRow, 7).toString();
+        String Contact = students.getValueAt(selectedRow, 3).toString();
+        String email = students.getValueAt(selectedRow, 4).toString();
+        String Course = students.getValueAt(selectedRow, 5).toString();
+        String Gender = students.getValueAt(selectedRow, 6).toString();
+        String Yearlvl = students.getValueAt(selectedRow, 7).toString();
         
         studid.setText(studentid);
         Namefield.setText(Name);
@@ -697,20 +697,23 @@ public class StudentsForm extends javax.swing.JFrame {
         ResultSet rs;
 
         try {
-            rs = st.executeQuery(query);
+            ColesEnrollmentSystem a = new ColesEnrollmentSystem();
+            a.db = database;
+            a.DBConnect();
+            rs = a.st.executeQuery(query);
             if (rs.next()) {
-                ColesEnrollmentSystem a = new ColesEnrollmentSystem();
-                a.db = database;
-                a.DBConnect();
+                ColesEnrollmentSystem b = new ColesEnrollmentSystem();
+                b.db = database;
+                b.DBConnect();
                 showRecords();
                 JOptionPane.showMessageDialog(null, "Connected to: " + database);
             } else {
-                st.executeUpdate("CREATE DATABASE " + database);
-                st.executeUpdate("USE " + database);
+                a.st.executeUpdate("CREATE DATABASE " + database);
+                a.st.executeUpdate("USE " + database);
                 String[] queries = ColesEnrollmentSystem.createDatabase.split(";");;
                 for (String q : queries) {
                     if (!q.trim().isEmpty()) {
-                        st.executeUpdate(q);
+                        a.st.executeUpdate(q);
                     }
                 }
                 JOptionPane.showMessageDialog(null, "Database created: " + database);
@@ -727,20 +730,23 @@ public class StudentsForm extends javax.swing.JFrame {
         String query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" + database + "'";
         ResultSet rs;
         try {
-            rs = st.executeQuery(query);
+            ColesEnrollmentSystem a = new ColesEnrollmentSystem();
+            a.db = database;
+            a.DBConnect();
+            rs = a.st.executeQuery(query);
             if (rs.next()) {
-                ColesEnrollmentSystem a = new ColesEnrollmentSystem();
-                a.db = database;
-                a.DBConnect();
+                ColesEnrollmentSystem b = new ColesEnrollmentSystem();
+                b.db = database;
+                b.DBConnect();
                 showRecords();
                 JOptionPane.showMessageDialog(null, "Connected to: " + database);
             } else {
-                st.executeUpdate("CREATE DATABASE " + database);
-                st.executeUpdate("USE " + database);
+                a.st.executeUpdate("CREATE DATABASE " + database);
+                a.st.executeUpdate("USE " + database);
                 String[] queries = ColesEnrollmentSystem.createDatabase.split(";");
                 for (String q : queries) {
                     if (!q.trim().isEmpty()) {
-                        st.executeUpdate(q);
+                        a.st.executeUpdate(q);
                     }
                 }
                 JOptionPane.showMessageDialog(null, "Database created: " + database);
@@ -757,20 +763,23 @@ public class StudentsForm extends javax.swing.JFrame {
         String query = "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '" + database + "'";
         ResultSet rs;
         try {
-            rs = st.executeQuery(query);
+            ColesEnrollmentSystem a = new ColesEnrollmentSystem();
+            a.db = database;
+            a.DBConnect();
+            rs = a.st.executeQuery(query);
             if (rs.next()) {
-                ColesEnrollmentSystem a = new ColesEnrollmentSystem();
-                a.db = database;
-                a.DBConnect();
+                ColesEnrollmentSystem b = new ColesEnrollmentSystem();
+                b.db = database;
+                b.DBConnect();
                 showRecords();
                 JOptionPane.showMessageDialog(null, "Connected to: " + database);
             } else {
-                st.executeUpdate("CREATE DATABASE " + database);
-                st.executeUpdate("USE " + database);
+                a.st.executeUpdate("CREATE DATABASE " + database);
+                a.st.executeUpdate("USE " + database);
                 String[] queries = ColesEnrollmentSystem.createDatabase.split(";");
                 for (String q : queries) {
                     if (!q.trim().isEmpty()) {
-                        st.executeUpdate(q);
+                        a.st.executeUpdate(q);
                     }
                 }
                 JOptionPane.showMessageDialog(null, "Database created: " + database);
@@ -818,32 +827,34 @@ public class StudentsForm extends javax.swing.JFrame {
         String today = String.valueOf(customyr.getText());
         String schoolYear = String.format("1stSem_Sy%s_%d", today, Integer.parseInt(today) + 1);
 
-        ColesEnrollmentSystem.DBConnect();
+        ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+        system.db = schoolYear;
+        system.DBConnect();
 
         try {
-            ColesEnrollmentSystem.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
-            ColesEnrollmentSystem.db = schoolYear;
-            ColesEnrollmentSystem.DBConnect();
+            system.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
+            system.db = schoolYear;
+            system.DBConnect();
             showRecords();
             JOptionPane.showMessageDialog(null, "Selected" + schoolYear);
             dblabel.setText(schoolYear);
 
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
+            system.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
             );
 
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
+            system.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
+            system.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
+            system.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
             );
 
             JOptionPane.showMessageDialog(null, "CREATED " + schoolYear);
@@ -856,32 +867,34 @@ public class StudentsForm extends javax.swing.JFrame {
         String today = String.valueOf(customyr.getText());
         String schoolYear = String.format("2ndSem_Sy%s_%d", today, Integer.parseInt(today) + 1);
 
-        ColesEnrollmentSystem.DBConnect();
+        ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+        system.db = schoolYear;
+        system.DBConnect();
 
         try {
-            ColesEnrollmentSystem.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
-            ColesEnrollmentSystem.db = schoolYear;
-            ColesEnrollmentSystem.DBConnect();
+            system.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
+            system.db = schoolYear;
+            system.DBConnect();
             showRecords();
             JOptionPane.showMessageDialog(null, "Selected" + schoolYear);
             dblabel.setText(schoolYear);
 
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
+            system.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
             );
 
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
+            system.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
+            system.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
+            system.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
             );
 
             JOptionPane.showMessageDialog(null, "CREATED " + schoolYear);
@@ -894,32 +907,34 @@ public class StudentsForm extends javax.swing.JFrame {
         String today = String.valueOf(customyr.getText());
         String schoolYear = String.format("Summer_Sy%s_%d", today, Integer.parseInt(today) + 1);
 
-        ColesEnrollmentSystem.DBConnect();
+        ColesEnrollmentSystem system = new ColesEnrollmentSystem();
+        system.db = schoolYear;
+        system.DBConnect();
 
         try {
-            ColesEnrollmentSystem.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
-            ColesEnrollmentSystem.db = schoolYear;
-            ColesEnrollmentSystem.DBConnect();
+            system.st.executeUpdate(String.format("CREATE DATABASE IF NOT EXISTS %s", schoolYear));
+            system.db = schoolYear;
+            system.DBConnect();
             showRecords();
             JOptionPane.showMessageDialog(null, "Selected" + schoolYear);
             dblabel.setText(schoolYear);
 
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
+            system.st.executeUpdate("CREATE TABLE StudentsTable (studentid INT PRIMARY KEY AUTO_INCREMENT, Name TEXT, Address TEXT, Contact TEXT, email TEXT, Course TEXT, Gender TEXT, YearLevel TEXT)AUTO_INCREMENT = 1001;\n"
             );
             
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
+            system.st.executeUpdate("CREATE TABLE SubjectsTable (subjid INT PRIMARY KEY AUTO_INCREMENT, subjcode TEXT, subjdescription TEXT, subjschedule TEXT, subjunit INT) AUTO_INCREMENT = 2001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
+            system.st.executeUpdate("CREATE TABLE TeachersTable (teachid INT PRIMARY KEY AUTO_INCREMENT, teachname TEXT, teachaddress TEXT, teachcontact TEXT, teachemail TEXT, teachdept TEXT) AUTO_INCREMENT = 3001;\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Enroll (eid INT PRIMARY KEY AUTO_INCREMENT, studid INT, subjid INT, UNIQUE KEY unique_stud_subj (studid, subjid), FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE, FOREIGN KEY (subjid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Assign (subid INT UNIQUE, tid INT, FOREIGN KEY (subid) REFERENCES SubjectsTable(subjid) ON DELETE CASCADE, FOREIGN KEY (tid) REFERENCES TeachersTable(teachid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Grades (gradesid INT PRIMARY KEY AUTO_INCREMENT, eid INT UNIQUE, prelim TEXT, midterm TEXT, prefinal TEXT, final TEXT, FOREIGN KEY (eid) REFERENCES Enroll(eid) ON DELETE CASCADE);\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
+            system.st.executeUpdate("CREATE TABLE TransactionCharges (transac INT PRIMARY KEY AUTO_INCREMENT, department TEXT, subjunit DECIMAL(10,2), insurance DECIMAL(10,2), computer DECIMAL(10,2), laboratory DECIMAL(10,2), cultural DECIMAL(10,2), library DECIMAL(10,2), facility DECIMAL(10,2));\n"
             );
-            ColesEnrollmentSystem.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
+            system.st.executeUpdate("CREATE TABLE Invoice (Transacid INT PRIMARY KEY AUTO_INCREMENT, invoicenum INT UNIQUE, studid INT, FOREIGN KEY (studid) REFERENCES StudentsTable(studentid) ON DELETE CASCADE);\n"
             );
 
             JOptionPane.showMessageDialog(null, "CREATED " + schoolYear);
